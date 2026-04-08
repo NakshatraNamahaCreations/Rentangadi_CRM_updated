@@ -276,7 +276,7 @@ const InventoryProduct = () => {
                         </td>
                         <td>{item.availableStock}</td>
                         <td>{item.reservedStock}</td>
-                        <td>{item.pendingQuotationQty}</td>
+                        <td style={item.availableStock < item.pendingQuotationQty ? { color: "red", fontWeight: 700 } : {}}>{item.pendingQuotationQty}</td>
                         <td>{item.totalStock}</td>
                         <td>{item.price}</td>
                       </tr>

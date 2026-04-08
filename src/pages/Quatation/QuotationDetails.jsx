@@ -2289,7 +2289,7 @@ const QuotationDetails = () => {
               fontWeight: "500",
               transition: "transform 0.2s",
             }}
-            disabled={quotation.status === "cancelled" || quotation.status === "send"}
+            disabled={quotation.status === "cancelled"}
             onMouseOver={(e) => (e.target.style.transform = "scale(1.05)")}
             onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
             // onClick={handleShowGenerateModal}
@@ -2720,7 +2720,7 @@ const QuotationDetails = () => {
                           )}
                         </td>
                         <td style={{ fontWeight: 700 }}>{item.availableStock}</td>
-                        <td>{item.pendingQuotationQty}</td>
+                        <td style={item.availableStock < item.pendingQuotationQty ? { color: "red", fontWeight: 700 } : {}}>{item.pendingQuotationQty}</td>
                       </tr>
                     );
                   })

@@ -840,7 +840,7 @@ const EnquiryDetails = () => {
                                 {row.availableStock}{console.log("row", row)}
                               </span>
                             </td>
-                            <td >{row.pendingQuotationQty}</td>
+                            <td style={row.availableStock < row.pendingQuotationQty ? { color: "red", fontWeight: 700 } : {}}>{row.pendingQuotationQty}</td>
                           </tr>
                         );
                       })

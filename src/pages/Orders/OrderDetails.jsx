@@ -2084,7 +2084,7 @@ const OrderDetails = () => {
                             )}
                           </td>
                           <td style={{ fontWeight: 700 }}>{item.availableStock}</td>
-                          <td>{item.pendingQuotationQty}</td>
+                          <td style={item.availableStock < item.pendingQuotationQty ? { color: "red", fontWeight: 700 } : {}}>{item.pendingQuotationQty}</td>
                         </tr>
                       );
                     })

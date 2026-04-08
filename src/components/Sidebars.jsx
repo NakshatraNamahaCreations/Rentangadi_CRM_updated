@@ -121,7 +121,7 @@ const Sidebars = () => {
     <div
       className="flex-column flex-shrink-0 p-3 vh-100 position-fixed sidebar-scroll"
       style={{
-        width: "20%",
+        width: "210px",
         zIndex: 1,
         background: "#BD5525",
         overflowY: "auto",
@@ -130,7 +130,7 @@ const Sidebars = () => {
     >
       <div className="w-100 d-flex justify-content-center" style={{ backgroundColor: "black" }}>
         <Link to="/dashboard">
-          <img src={logo} alt="logo" style={{ width: "200px" }} className="mx-auto" />
+          <img src={logo} alt="logo" style={{ width: "160px" }} className="mx-auto" />
         </Link>
       </div>
 
