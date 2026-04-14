@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Table, Container, Modal, Form } from "react-bootstrap";
+import { Button, Card, Table, Container, Form } from "react-bootstrap";
 import Pagination from "../../components/Pagination";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 import { ApiURL, ImageApiURL } from "../../api";
 import { MdVisibility } from "react-icons/md";
 
 const ProductManagement = () => {
   const navigate = useNavigate();
-  // Load initial search state from localStorage
-  const savedSearch = localStorage.getItem('productSearchQuery') || "";
+  const savedSearch = localStorage.getItem("productSearchQuery") || "";
   const [searchQuery, setSearchQuery] = useState(savedSearch);
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,17 +19,15 @@ const ProductManagement = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch products from API
+
+  // ─────────────────────────────────────────────────────────────────────────
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${ApiURL}/product/getinventoryproducts`
-      );
+      const response = await axios.get(`${ApiURL}/product/getinventoryproducts`);
       if (response.status === 200) {
         setProducts(response.data.ProductsData);
         setFilteredProducts(response.data.ProductsData);
-        console.log("producty", response.data);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -43,57 +41,39 @@ const ProductManagement = () => {
   }, []);
 
   useEffect(() => {
-    // Save search query to localStorage
-    localStorage.setItem('productSearchQuery', searchQuery);
-
+    localStorage.setItem("productSearchQuery", searchQuery);
     const filtered = products.filter((product) => {
-      // Split the search query into words
-      const searchWords = searchQuery.toLowerCase().split(' ').filter(word => word.trim());
-      // Split product name into words
-      const productWords = product.ProductName.toLowerCase().split(' ');
-      const productWordsDesc = product.ProductDesc.toLowerCase().split(' ');
-
-      // Check if all search words match either:
-      // 1. As complete words, or
-      // 2. As partial matches at the start of words
-      return searchWords.every(searchWord =>
-        productWords.some(productWord =>
-          productWord === searchWord || productWord.startsWith(searchWord)
-        ) || productWordsDesc.some(productWordDesc =>
-          productWordDesc === searchWord || productWordDesc.startsWith(searchWord)
-        )
+      const searchWords = searchQuery.toLowerCase().split(" ").filter((w) => w.trim());
+      const productWords = product.ProductName.toLowerCase().split(" ");
+      const productWordsDesc = (product.ProductDesc || "").toLowerCase().split(" ");
+      return searchWords.every(
+        (sw) =>
+          productWords.some((pw) => pw === sw || pw.startsWith(sw)) ||
+          productWordsDesc.some((pw) => pw === sw || pw.startsWith(sw))
       );
     });
     setFilteredProducts(filtered);
     setCurrentPage(1);
-
     return () => {
-      console.log("cleanup func: ", location.pathname);
-      // Only clear search state when navigating away to a different module
-      if (location.pathname !== '/product-management' &&
-        !location.pathname.startsWith('/product-details/') &&
-        !location.pathname.startsWith('/edit-product/')) {
-        console.log("clearing search state: ", location.pathname);
-
+      if (
+        location.pathname !== "/product-management" &&
+        !location.pathname.startsWith("/product-details/") &&
+        !location.pathname.startsWith("/edit-product/")
+      ) {
         setSearchQuery("");
-        localStorage.removeItem('productSearchQuery');
+        localStorage.removeItem("productSearchQuery");
       }
     };
   }, [searchQuery, products]);
 
   const handleDeleteProduct = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you wanna delete?");
-    if (!confirmDelete) return;
+    if (!window.confirm("Are you sure you wanna delete?")) return;
     try {
       await axios.delete(`${ApiURL}/product/deleteProducts/${id}`);
-      fetchProducts(); // Refresh data
+      fetchProducts();
     } catch (error) {
       console.error("Error deleting product:", error);
     }
-  };
-
-  const handleEditProduct = (id) => {
-    navigate(`/edit-product/${id}`);
   };
 
   const handleSelectRow = (id) => {
@@ -103,31 +83,20 @@ const ProductManagement = () => {
   };
 
   const handleSelectAllRows = (checked) => {
-    const currentPageIds = currentItems.map((product) => product._id);
+    const currentPageIds = currentItems.map((p) => p._id);
     if (checked) {
-      // const newSelected = [...new Set([...selectedRows, ...currentPageIds])];
-      // Replace selectedRows with only current page IDs (like sub category page)
-      const newSelected = [...new Set([...currentPageIds])];
-      setSelectedRows(newSelected);
+      setSelectedRows([...new Set([...currentPageIds])]);
     } else {
-      const remaining = selectedRows.filter(
-        (id) => !currentPageIds.includes(id)
-      );
-      setSelectedRows(remaining);
+      setSelectedRows(selectedRows.filter((id) => !currentPageIds.includes(id)));
     }
   };
 
   const handleDeleteSelected = async () => {
-    const confirmDelete = window.confirm("Delete selected products?");
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Delete selected products?")) return;
     try {
       await Promise.all(
-        selectedRows.map((id) =>
-          axios.delete(`${ApiURL}/product/deleteProducts/${id}`)
-        )
+        selectedRows.map((id) => axios.delete(`${ApiURL}/product/deleteProducts/${id}`))
       );
-
       fetchProducts();
       setSelectedRows([]);
     } catch (err) {
@@ -136,28 +105,12 @@ const ProductManagement = () => {
     }
   };
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredProducts.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
 
-  // if (loading) {
-  //   return (
-  //     <Container className="my-5">
-  //       <Card className="shadow-lg border-0 rounded-4 p-5 text-center">
-  //         <h5>Loading products...</h5>
-  //       </Card>
-  //     </Container>
-  //   );
-  // }
 
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <Container style={{ background: "#F4F4F4", paddingBlock: "20px" }}>
       <div className="d-flex justify-content-between mb-3">
@@ -166,7 +119,7 @@ const ProductManagement = () => {
             type="text"
             placeholder="Search Product"
             value={searchQuery}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="shadow-sm"
             style={{ width: "250px", fontSize: "12px" }}
           />
@@ -176,91 +129,48 @@ const ProductManagement = () => {
             onClick={() => navigate("/add-product")}
             variant="primary"
             className="fw-bold rounded-1 shadow-lg"
-            style={{
-              fontSize: "12px",
-              padding: "6px 12px",
-              background: "#BD5525",
-              borderColor: "#BD5525",
-            }}
+            style={{ fontSize: "12px", padding: "6px 12px", background: "#BD5525", borderColor: "#BD5525" }}
           >
             + Add Product
           </Button>
-          {/* Selected Rows Count */}
           {selectedRows.length > 0 && (
-            <div>
-              <Button
-                variant="outline-danger"
-                onClick={handleDeleteSelected}
-                style={{
-                  fontSize: "12px",
-                  padding: "6px 12px",
-                }}
-              >
-                Delete {selectedRows.length} Selected
-              </Button>
-            </div>
+            <Button
+              variant="outline-danger"
+              onClick={handleDeleteSelected}
+              style={{ fontSize: "12px", padding: "6px 12px" }}
+            >
+              Delete {selectedRows.length} Selected
+            </Button>
           )}
         </div>
       </div>
 
       <Card className="border-0 shadow-sm">
-        <div
-          className="table-responsive bg-white rounded-lg"
-          style={{ maxHeight: "70vh", overflowY: "auto" }}
-        >
+        <div className="table-responsive bg-white rounded-lg" style={{ maxHeight: "70vh", overflowY: "auto" }}>
           <Table
             className="table table-hover align-middle"
-            style={{
-              borderRadius: "8px",
-              border: "1px solid #e0e0e0",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-            }}
+            style={{ borderRadius: "8px", border: "1px solid #e0e0e0", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
           >
-            <thead
-              className="text-white text-center"
-              style={{ backgroundColor: "#323D4F", fontSize: "12px" }}
-            >
+            <thead className="text-white text-center" style={{ backgroundColor: "#323D4F", fontSize: "12px" }}>
               <tr>
-                <th className="" style={{ width: "5%" }}>
+                <th style={{ width: "5%" }}>
                   <input
                     type="checkbox"
                     onChange={(e) => handleSelectAllRows(e.target.checked)}
-                    checked={
-                      currentItems.length > 0 &&
-                      currentItems.every((item) =>
-                        selectedRows.includes(item._id)
-                      )
-                    }
+                    checked={currentItems.length > 0 && currentItems.every((item) => selectedRows.includes(item._id))}
                   />
                 </th>
-                <th className="text-start" style={{ width: "15%" }}>
-                  Product Image
-                </th>
-                <th className="text-start" style={{ width: "20%" }}>
-                  Product Name
-                </th>
-                <th className="text-start" style={{ width: "10%" }}>
-                  Stock
-                </th>
-                <th className="text-start" style={{ width: "10%" }}>
-                  Pricing
-                </th>
-                <th className="text-start" style={{ width: "10%" }}>
-                  Seater
-                </th>
-                <th className="text-start" style={{ width: "10%" }}>
-                  Material
-                </th>
-                {/* <th className="text-start" style={{ width: "10%" }}>
-                  Description
-                </th> */}
-                <th className="text-center" style={{ width: "15%" }}>
-                  Actions
-                </th>
+                <th className="text-start" style={{ width: "15%" }}>Product Image</th>
+                <th className="text-start" style={{ width: "20%" }}>Product Name</th>
+                <th className="text-start" style={{ width: "10%" }}>Stock</th>
+                <th className="text-start" style={{ width: "10%" }}>Pricing</th>
+                <th className="text-start" style={{ width: "10%" }}>Seater</th>
+                <th className="text-start" style={{ width: "10%" }}>Material</th>
+                <th className="text-center" style={{ width: "15%" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((product, index) => (
+              {currentItems.map((product) => (
                 <tr key={product._id} className="text-center hover-row">
                   <td>
                     <input
@@ -271,78 +181,57 @@ const ProductManagement = () => {
                   </td>
                   <td>
                     <img
-                      // src={`${ImageApiURL}product/${product.ProductIcon}`}
                       src={`${ImageApiURL}/product/${product.ProductIcon}`}
                       alt={product.ProductIcon}
-                      style={{
-                        width: "50px",
-                        height: "50px",
-                        objectFit: "cover",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                      }}
+                      style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "4px", fontSize: "12px" }}
                     />
                   </td>
-                  <td
-                    className="fw-semibold text-start"
-                    style={{ fontSize: "12px" }}
-                  >
+                  <td className="fw-semibold text-start" style={{ fontSize: "12px" }}>
                     {product.ProductName}
                   </td>
                   <td className="text-start" style={{ fontSize: "12px" }}>
-                    {product.ProductStock ? product.ProductStock : "0"}
+                    {product.ProductStock || "0"}
                   </td>
                   <td className="text-start" style={{ fontSize: "12px" }}>
                     {product.ProductPrice}
                   </td>
                   <td className="text-start" style={{ fontSize: "12px" }}>
-                    {product.seater ? product.seater : "N/A"}
+                    {product.seater || "N/A"}
                   </td>
                   <td className="text-start" style={{ fontSize: "12px" }}>
-                    {product.Material ? product.Material : "N/A"}
+                    {product.Material || "N/A"}
                   </td>
-                  {/* <td className="text-start" style={{ fontSize: "12px" }}>
-                    {product.ProductDesc}
-                  </td> */}
-                  <td className="">
+                  <td>
+                    {/* View */}
                     <Button
-                      variant="outline-dark"
-                      size="sm"
-                      className="me-2 icon-btn"
+                      variant="outline-dark" size="sm" className="me-1 icon-btn"
                       style={{ padding: "4px 8px", fontSize: "10px" }}
-                      onClick={() =>
-                        navigate(`/product-details/${product._id}`)
-                      }
+                      onClick={() => navigate(`/product-details/${product._id}`)}
                     >
                       <MdVisibility />
                     </Button>
+                    {/* Delete */}
                     <Button
-                      variant="outline-danger"
-                      size="sm"
-                      className="me-2 icon-btn"
+                      variant="outline-danger" size="sm" className="me-1 icon-btn"
                       style={{ padding: "4px 8px", fontSize: "10px" }}
                       onClick={() => handleDeleteProduct(product._id)}
                     >
                       <FaTrashAlt style={{ width: "12px", height: "12px" }} />
                     </Button>
+                    {/* Edit */}
                     <Button
-                      variant="outline-success"
-                      size="sm"
-                      className="icon-btn"
+                      variant="outline-success" size="sm" className="icon-btn"
                       style={{ padding: "4px 8px", fontSize: "10px" }}
-                      onClick={() => handleEditProduct(product._id)}
+                      onClick={() => navigate(`/edit-product/${product._id}`)}
                     >
                       <FaEdit style={{ width: "12px", height: "12px" }} />
                     </Button>
                   </td>
                 </tr>
               ))}
-
               {filteredProducts.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="text-center">
-                    No Products found.
-                  </td>
+                  <td colSpan="8" className="text-center">No Products found.</td>
                 </tr>
               )}
             </tbody>
@@ -350,13 +239,13 @@ const ProductManagement = () => {
         </div>
       </Card>
 
-      {/* Pagination Component */}
       <Pagination
         totalItems={filteredProducts.length}
         itemsPerPage={itemsPerPage}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
       />
+
     </Container>
   );
 };
