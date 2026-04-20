@@ -13,15 +13,16 @@ const QuotationCalendar = () => {
   const navigate = useNavigate();
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Fetch quotations from API
   useEffect(() => {
     const fetchQuotations = async () => {
       try {
         setLoading(true);
-
-        const res = await axios.get(`${ApiURL}/quotations/getallquotations`);
-        console.log("Quotations:", res.data.quoteData);
+        const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
+        const res = await axios.get(`${ApiURL}/quotations/getallquotations`, {
+          params: { month, limit: 500 },
+        });
         if (res.status === 200) {
           setQuotations(res.data.quoteData || []);
         }
@@ -32,7 +33,7 @@ const QuotationCalendar = () => {
       }
     };
     fetchQuotations();
-  }, []);
+  }, [currentDate]);
 
   // Group quotations by date (DD-MM-YYYY)
   const quotationsCountByDate = useMemo(() => {
@@ -104,6 +105,8 @@ const QuotationCalendar = () => {
               views={["month", "week", "day", "agenda"]}
               popup
               selectable
+              date={currentDate}
+              onNavigate={(date) => setCurrentDate(date)}
               onSelectEvent={handleCalendarEventClick}
               eventPropGetter={eventStyleGetter}
             />

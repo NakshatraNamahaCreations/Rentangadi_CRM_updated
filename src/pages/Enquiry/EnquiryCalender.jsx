@@ -13,12 +13,15 @@ const localizer = momentLocalizer(moment);
 const EnquiryCalender = () => {
   const navigate = useNavigate();
   const [enquiries, setEnquiries] = useState([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Fetch from API
   useEffect(() => {
     const fetchEnquiry = async () => {
       try {
-        const res = await axios.get(`${ApiURL}/Enquiry/getallEnquiry`);
+        const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
+        const res = await axios.get(`${ApiURL}/Enquiry/getallEnquiry`, {
+          params: { month },
+        });
 
         if (res.status === 200) {
           setEnquiries(res.data || []);
@@ -28,7 +31,7 @@ const EnquiryCalender = () => {
       }
     };
     fetchEnquiry();
-  }, []);
+  }, [currentDate]);
 
   // Group enquiries by date (DD-MM-YYYY)
   const enquiriesCountByDate = useMemo(() => {
@@ -91,6 +94,8 @@ const EnquiryCalender = () => {
               views={["month", "week", "day", "agenda"]}
               popup
               selectable
+              date={currentDate}
+              onNavigate={(date) => setCurrentDate(date)}
               onSelectEvent={handleCalendarEventClick}
               eventPropGetter={eventStyleGetter}
             />
