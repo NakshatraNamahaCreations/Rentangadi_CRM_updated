@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+
+
+/* when ON */
+.brand-switch .form-check-input:checked {
+  background-color: #BD5525 !important;
+  border-color: #BD5525 !important;
+}
+
+/* focus ring color */
+.brand-switch .form-check-input:focus {
+  border-color: #BD5525 !important;
+  box-shadow: 0 0 0 0.2rem rgba(189, 85, 37, 0.25) !important;
+}
