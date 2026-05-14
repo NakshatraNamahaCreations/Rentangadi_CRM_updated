@@ -49,9 +49,29 @@ const QuotationInvoice = () => {
     const fetchQuotation = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${ApiURL}/quotations/getquotation/${id}`);
-        console.log(`Fetched quote: `, res.data.quoteData);
-        const quoteData = res.data.quoteData;
+
+        // Fetch quotation and product master in parallel.
+        const [quoteRes, productsRes] = await Promise.all([
+          axios.get(`${ApiURL}/quotations/getquotation/${id}`),
+          axios
+            .get(`${ApiURL}/product/quoteproducts`)
+            .catch(() => ({ data: { QuoteProduct: [] } })),
+        ]);
+
+        console.log(`Fetched quote: `, quoteRes.data.quoteData);
+        const quoteData = quoteRes.data.quoteData;
+        const allProducts = productsRes?.data?.QuoteProduct || [];
+
+        // Resolve product name from master when the stored name is missing
+        // or was saved as the literal "Unnamed Product" placeholder.
+        const resolveName = (prod) => {
+          const stored = prod.productName;
+          if (stored && stored.trim() && stored !== "Unnamed Product") return stored;
+          const fromMaster = allProducts.find(
+            (p) => String(p._id) === String(prod.productId)
+          )?.ProductName;
+          return fromMaster || stored || "—";
+        };
 
         // Calculate days and total for each product
         const enrichedItems = (quoteData.slots?.[0]?.Products || []).map(prod => {
@@ -70,6 +90,7 @@ const QuotationInvoice = () => {
 
           return {
             ...prod,
+            productName: resolveName(prod),
             days,
             pricePerUnit: price,
             amount: total,

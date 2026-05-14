@@ -207,6 +207,17 @@ const QuotationDetails = () => {
         // setProductDates(initialProductDates);
       }
 
+      const resolveName = (prod) => {
+        // Prefer the freshest name from the product master (handles legacy
+        // quotations that were saved with productName missing / "Unnamed Product").
+        const fromMaster = allProducts.find(
+          (p) => String(p._id) === String(prod.productId)
+        )?.ProductName;
+        const stored = prod.productName;
+        if (stored && stored.trim() && stored !== "Unnamed Product") return stored;
+        return fromMaster || stored || "—";
+      };
+
       const updatedItems =
         quotation?.slots && Array.isArray(quotation.slots)
           ? quotation.slots.flatMap((slot) =>
@@ -225,7 +236,7 @@ const QuotationDetails = () => {
               return {
                 sNo: prod.sNo || "",
                 productId: prod.productId,
-                productName: prod.productName || "",
+                productName: resolveName(prod),
                 image: prod.ProductIcon,
                 units: prod.quantity || prod.qty,
                 days,
@@ -246,7 +257,7 @@ const QuotationDetails = () => {
       setItems(updatedItems);
 
     }
-  }, [quotation]);
+  }, [quotation, allProducts]);
 
   const handleShowGenerateModal = () => setShowGenerateModal(true);
   const handleCloseGenerateModal = () => setShowGenerateModal(false);
